@@ -1,0 +1,481 @@
+<meta charset="utf-8">
+<title>Harmonica Songbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  /* One reading column, with a sticky song list. Tab numbers are the largest thing on the page because they get read while playing. */
+  :root {
+    --bg: #eef1f2;
+    --surface: #ffffff;
+    --fg: #1b2226;
+    --muted: #5a666d;
+    --line: #cfd6d9;
+    --draw: #b23a1e;
+    --accent: #1f5f7a;
+    --on-accent: #ffffff;
+    --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+    --tab: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14191c;
+      --surface: #1d2428;
+      --fg: #e9eef0;
+      --muted: #9aa7ae;
+      --line: #344047;
+      --draw: #ff8f6b;
+      --accent: #7cc3df;
+      --on-accent: #10242d;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14191c;
+    --surface: #1d2428;
+    --fg: #e9eef0;
+    --muted: #9aa7ae;
+    --line: #344047;
+    --draw: #ff8f6b;
+    --accent: #7cc3df;
+    --on-accent: #10242d;
+    color-scheme: dark;
+  }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 400 1rem/1.5 var(--body);
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto;
+    height: env(safe-area-inset-top, 0px);
+    z-index: 10;
+    background: var(--surface);
+  }
+
+  .wrap {
+    max-width: 46rem;
+    margin-inline: auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  header.top { padding-block: 2rem 1.25rem; }
+  h1 {
+    margin: 0;
+    font: 700 2.75rem/1 var(--display);
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+  }
+  .sub { margin: 0.4rem 0 0; color: var(--muted); }
+
+  nav.songs {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 5;
+    background: var(--surface);
+    border-block: 1px solid var(--line);
+  }
+  nav.songs ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.1rem;
+    margin: 0;
+    padding: 0.55rem 0;
+    list-style: none;
+    white-space: nowrap;
+  }
+  nav.songs a {
+    color: var(--fg);
+    font-weight: 500;
+    font-size: 0.95rem;
+    text-decoration: none;
+  }
+  nav.songs a:hover { color: var(--accent); text-decoration: underline; }
+
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  main { display: grid; gap: 2.75rem; padding-block: 1.75rem 4rem; }
+
+  .key { display: grid; gap: 0.9rem; }
+  .key dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.3rem 0.9rem;
+    margin: 0;
+  }
+  .key dt { font: 600 1.05rem/1.5 var(--tab); }
+  .key dd { margin: 0; }
+
+  .chart-box { overflow-x: auto; }
+  table.holes {
+    border-collapse: collapse;
+    font: 500 0.9rem/1 var(--tab);
+    font-variant-numeric: tabular-nums;
+  }
+  table.holes caption {
+    caption-side: top;
+    text-align: left;
+    padding-bottom: 0.4rem;
+    color: var(--muted);
+    font: 400 0.9rem/1.4 var(--body);
+  }
+  table.holes th, table.holes td {
+    padding: 0.4rem 0.5rem;
+    text-align: center;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+  table.holes th { font-weight: 600; }
+  table.holes th[scope="row"] { font-family: var(--body); text-align: left; }
+  table.holes .draw-row, table.holes .draw-row th { color: var(--draw); }
+
+  section.song { scroll-margin-top: 7rem; display: grid; gap: 1rem; }
+  .song-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    border-bottom: 2px solid var(--fg);
+    padding-bottom: 0.4rem;
+  }
+  h2 {
+    margin: 0;
+    min-width: 0;
+    font: 700 1.9rem/1.1 var(--display);
+    text-wrap: balance;
+  }
+  .meta { margin: 0; color: var(--muted); max-width: 65ch; }
+
+  .view { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .view button {
+    border: 0;
+    padding: 0.3rem 0.65rem;
+    background: var(--surface);
+    color: var(--fg);
+    font: 500 0.875rem/1.3 var(--body);
+    cursor: pointer;
+  }
+  .view button + button { border-left: 1px solid var(--line); }
+  .view button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+
+  .part { display: grid; gap: 0.7rem; }
+  h3 {
+    margin: 0;
+    font: 600 0.8rem/1.3 var(--body);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .ref { margin: 0; font-weight: 500; }
+
+  .line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.9rem;
+  }
+  .cell { display: grid; gap: 0.05rem; min-width: 1.1rem; }
+  .note {
+    font: 600 1.4rem/1.2 var(--tab);
+    font-variant-numeric: tabular-nums;
+  }
+  .note.is-draw { color: var(--draw); }
+  .note.is-rest { color: var(--muted); font-weight: 500; }
+  .len {
+    min-height: 1.2em;
+    font: 500 0.95rem/1.2 var(--tab);
+    color: var(--accent);
+  }
+  .lines { display: grid; gap: 0.95rem; }
+  .plain .lines { gap: 0.45rem; }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Harmonica Songbook</h1>
+    <p class="sub">Tabs for a 10-hole diatonic harmonica in C.</p>
+  </div>
+</header>
+
+<nav class="songs" aria-label="Songs">
+  <div class="wrap"><ul id="song-links"></ul></div>
+</nav>
+
+<main class="wrap">
+  <section class="key" aria-label="How to read these tabs">
+    <dl>
+      <dt>4</dt><dd>Blow hole 4.</dd>
+      <dt style="color: var(--draw)">-4</dt><dd>Draw hole 4.</dd>
+      <dt>r</dt><dd>Rest.</dd>
+      <dt style="color: var(--accent)">½</dt><dd>Beats under a note. A length carries forward until a new number appears, and every line starts with one.</dd>
+    </dl>
+    <div class="chart-box">
+      <table class="holes">
+        <caption>Notes on a C harmonica</caption>
+        <thead>
+          <tr><th scope="col">Hole</th><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th><th scope="col">6</th><th scope="col">7</th><th scope="col">8</th><th scope="col">9</th><th scope="col">10</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Blow</th><td>C</td><td>E</td><td>G</td><td>C</td><td>E</td><td>G</td><td>C</td><td>E</td><td>G</td><td>C</td></tr>
+          <tr class="draw-row"><th scope="row">Draw</th><td>D</td><td>G</td><td>B</td><td>D</td><td>F</td><td>A</td><td>B</td><td>D</td><td>F</td><td>A</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <div id="songs" style="display: grid; gap: 2.75rem;"></div>
+</main>
+
+<script>
+/*DATA*/
+const SONGS = [
+  {
+    id: "magnificent-seven",
+    title: "The Magnificent Seven",
+    short: "Magnificent Seven",
+    meta: "Feels like 2 beats per bar, with each bar worth 4 of the beats counted here.",
+    tabNote: "Your original tab. It is shorter than the rhythm version, which follows the sheet music and includes the bridge.",
+    rhythm: [
+      { label: "Part A", lines: ["4:1 r:.5 5:1 5:.5 -4:1", "r:.5 4:1 4:.5 5:.5 5:.5 -4:1", "4:1 r:.5 5:1 5:.5 -4:1", "r:.5 4:.5 4:.5 4:.5 5:.5 5:.5 -4:1"] },
+      { label: "Part B", lines: ["5:1 6:5 -6:1 6:1 -5:1 7:7", "5:1 6:5 -6:1 6:1 -5:1 -4:5 4:1 -4:1", "5:1 6:2 -6:1 6:1 5:1 4:2", "r:1 7:1 7:1 -6:1 6:1 -6:1 4:1 -4:1"] },
+      { label: "Part A, second version", lines: ["5:1 4:.5 4:1 5:.5 -4:1", "r:.5 4:1 4:.5 5:.5 5:.5 -4:1", "4:1 r:.5 5:1 5:.5 -4:1", "r:.5 4:.5 4:.5 4:.5 5:.5 5:.5 -4:1"] },
+      { label: "Bridge", lines: ["4:1 6:4.5 7:1 -6:.5 6:1", "-5:1 -4:4.5 4:1.5 -4:1", "5:1 6:4.5 -6:1 6:.5 5:1", "-4:1 -5:7"] },
+      { label: "Part A, third version", lines: ["5:1 4:.5 4:1 5:.5 -4:1", "r:.5 4:1 4:.5 5:.5 5:.5 -4:1", "4:1 r:.5 4:.5 5:.5 5:.5 -4:1", "r:.5 4:.5 4:.5 4:.5 5:.5 5:.5 -4:1"] },
+      { label: "Part B again", ref: "Play Part B again." },
+      { label: "Ending", ref: "Play Part A, second version, then finish on this note:", lines: ["4:1"] }
+    ],
+    tab: [
+      { label: "Part A, play 2×", lines: ["4 5 5 -4", "4 4 5 5 -4"] },
+      { label: "Part B, play 2×", lines: ["5 6 -6 6 -5 7", "5 6 -6 6 -5 -4", "5 6 -6 6 5 4", "7 -6 6 -6 4 -4 5 4"] },
+      { label: "Part A, play 2×", lines: ["4 5 5 -4", "4 4 5 5 -4"] }
+    ]
+  },
+  {
+    id: "few-dollars-more",
+    title: "For a Few Dollars More",
+    short: "Few Dollars More",
+    meta: "Timing from the video, at about 83 beats per minute. The rest and final note in the ending are the least certain.",
+    tabNote: "Your original tab. The rhythm version has the same notes, and plays its two -6s before the fifth line's -7 as one long note.",
+    rhythm: [
+      { lines: ["5:.5 -6:3 6:1 5:3.5", "-4:.5 5:3 -4:1 -6:2 r:1.5", "5:.5 -6:1 -6:.25 -7:.25 -6:.25 6:.25 -6:.5 -7:.5 7:.5 5:.5", "-6:1 -6:.25 -7:.25 -6:.25 6:.25 -6:.5 6:.5 5:.5 5:.5", "-6:1.25 -7:.25 -6:.25 6:.25 -6:.5 -7:.5 7:.5 -6:.5", "6:.5 6:.5 r:2.5 5:1 -4:.5 -3:2.5 6:.5", "-6:2 5:3 r:2"] },
+      { label: "To finish", ref: "Play from the start again and stop on the 7 in the third line." }
+    ],
+    tab: [
+      { lines: ["5 -6 6 5", "-4 5 -4 -6", "5 -6", "-6 -7 -6 6 -6 -7 7", "5 -6", "-6 -7 -6 6 -6 6 5", "5 -6", "-6 -7 -6 6 -6 -7 7", "-6 6 6", "5 -4 -3", "6 -6 5"] }
+    ]
+  },
+  {
+    id: "rayman-legends",
+    title: "Rayman Legends",
+    meta: "Approximate: the timing is measured from a harmonica recording, at about 83 beats per minute. The long rests are where the backing track plays.",
+    tabNote: "Your original tab. The rhythm version has the same notes.",
+    rhythm: [
+      { label: "First section (approximate)", lines: ["-4:.5 -4:.25 -4:.25 -5:.5 6:.5 -6:1 r:6", "-6:.5 -7:.25 7:.25 7:.5 7:.5 7:.5 -8:.5 -6:1 r:7", "-4:.5 -4:.25 -4:.25 -5:.5 6:.5 -6:1 r:6", "-6:.5 -7:.25 7:.25 7:.5 7:.5 7:.5 -8:.5 -6:1 r:6"] },
+      { label: "Second section (approximate)", lines: ["-8:.5 7:.5 6:.5 6:.25 6:.25 6:.5", "-5:.5 6:.5 6:.25 6:.25 6:.5", "-5:.5 6:.5 6:.25 6:.25 6:.5 -5:.5 -4:1"] },
+      { lines: ["-8:.5 7:.5 6:.5 6:.25 6:.25 6:.5", "-5:.5 6:.5 6:.25 6:.25 6:.5", "-5:.5 6:.5 6:.25 6:.25 6:.5 -5:.5 -4:2"] }
+    ],
+    tab: [
+      { lines: ["-4 -4 -4 -5 6 -6", "-6 -7 7 7 7 7 -8 -6", "-4 -4 -4 -5 6 -6", "-6 -7 7 7 7 7 -8 -6"] },
+      { lines: ["-8 7 6 6 6 6", "-5 6 6 6 6", "-5 6 6 6 6 -5 -4"] },
+      { lines: ["-8 7 6 6 6 6", "-5 6 6 6 6", "-5 6 6 6 6 -5 -4"] }
+    ]
+  },
+  {
+    id: "pecos-bill",
+    title: "The Ballad of Pecos Bill",
+    short: "Pecos Bill",
+    meta: "Timing from the video, at about 180 beats per minute. The video plays the verse, the chorus twice, then all of that again.",
+    tabNote: "Your original tab. It has the same notes as the rhythm version.",
+    rhythm: [
+      { label: "Verse", lines: ["4:1 -4:1 5:1 6:1 5:1 4:1 -4:1 -5:1", "-4:1 -3:1 4:1 3:5", "4:1 -4:1 5:1 6:1 5:1 4:1 -4:1 -5:1", "-4:1 -3:1 4:5"] },
+      { label: "Chorus, play 2×", lines: ["4:1 4:1 4:1 -6:2 -5:1 -6:2", "4:1 -5:1 -6:1 -6:1 6:5", "4:1 -4:1 5:1 6:1 5:1 4:1", "-4:1 -5:1 -4:1 -3:1 4:5"] }
+    ],
+    tab: [
+      { lines: ["4 -4 5 6 5 4 -4 -5", "-4 -3 4 3", "4 -4 5 6 5 4 -4 -5", "-4 -3 4"] },
+      { label: "Play 2×", lines: ["4 4 4 -6 -5 -6", "4 -5 -6 -6 6", "4 -4 5 6 5 4", "-4 -5 -4 -3 4"] }
+    ]
+  },
+  {
+    id: "el-paso",
+    title: "El Paso",
+    meta: "Timing from the video, at about 146 beats per minute. A waltz, with 3 beats per bar. Count the long holds and rests loosely.",
+    tabNote: "Your original tab. It has the same notes as the rhythm version.",
+    rhythm: [
+      { label: "Verse, play 4×", lines: ["4:1 4:1 5:1 6:1 5:1 4:1", "-4:1 -4:1 -5:1 -6:1 -5:2", "3:1 -3:1 -4:1 -5:1 5:1 -4:1", "-5:1 5:1 -4:1 4:6 r:6"] },
+      { label: "Then", lines: ["4:1 -5:1 6:1 -6:2", "-6:1 -6:2 -6:1 -5:3", "4:1 -5:1 6:1 -6:2 -6:1 7:6 8:8 r:8"] },
+      { lines: ["4:1 5:1 6:1 7:2 7:1 7:1 -6:1 6:1 5:1 4:1", "4:1 4:1 5:1 6:1", "6:2 6:1 6:2 6:1 -5:4", "5:1 -5:1 6:3 -5:2 -4:1 4:6"] }
+    ],
+    tab: [
+      { label: "Play 4×", lines: ["4 4 5 6 5 4", "-4 -4 -5 -6 -5", "3 -3 -4 -5 5 -4", "-5 5 -4 4"] },
+      { label: "Then", lines: ["4 -5 6 -6", "-6 -6 -6 -5", "4 -5 6 -6 -6 7 8"] },
+      { lines: ["4 5 6 7 7 7 -6 6 5 4", "4 4 5 6", "6 6 6 6 -5", "5 -5 6 -5 -4 4"] }
+    ]
+  },
+  {
+    id: "d-rails",
+    title: "D. Rails (Western Ballad)",
+    short: "D. Rails",
+    meta: "Western Ballad from Dead Rails, by Pierre Jean Gidon. 100 beats per minute, with 2 beats per bar. The score plays this melody twice, holding the final -4 for 8 beats the last time.",
+    tabNote: "Your original tab. The rhythm version adds the rests and a quick -8 from the sheet music, plus one extra -4 before the last line.",
+    rhythm: [
+      { label: "First section", lines: ["-4:.5 r:.5 -4:.5 5:.5 -5:.5 r:.5 -5:.5", "5:.5 -4:.5 r:.5 -4:.5 4:.5 -5:6", "r:2 -4:.5 r:.5 -4:.5 5:.5 -5:.5 r:.5 -5:.5", "6:.5 -6:.5 r:.5 -6:.5 7:.5 -8:.25 -6:3.75"] },
+      { label: "Second section", lines: ["r:1.5 6:.25 -5:.25 6:1 r:.5 -4:.5 -4:3 r:1", "-5:1 r:.5 -4:.25 4:.25 -4:6", "r:1.5 6:.25 -5:.25 6:1 r:.5 -4:.5 -4:3 r:.5 -4:.5", "-5:1 r:.5 -4:.25 4:.25 -4:7"] }
+    ],
+    tab: [
+      { lines: ["-4 -4 5 -5 -5", "5 -4 -4 4 -5", "-4 -4 5 -5 -5", "6 -6 -6 7 -6"] },
+      { lines: ["6 -5 6 -4 -4", "-5 -4 4 -4", "6 -5 6 -4 -4", "-5 -4 4 -4"] }
+    ]
+  },
+  {
+    id: "work-done-this-fall",
+    title: "When the Work's All Done this Fall",
+    short: "Work's All Done",
+    meta: "80 beats per minute on the score. The same melody repeats for each verse.",
+    tabNote: "Your original tab. It covers about half of the sheet music's melody, and some of its notes differ.",
+    rhythm: [
+      { label: "First half", lines: ["6:.5 4:.5 4:.5 5:.5 6:.5 7:.5 7:1 7:.5", "-8:.5 -4:.5 -4:.5 -4:.5 -4:1.5 -4:.5", "-4:.75 5:.25 -5:.5 6:.5 -7:.5 -7:.5 -7:.5 6:.5", "-6:.5 6:.5 6:.5 -5:.5 5:1 6:1"] },
+      { label: "Second half", lines: ["4:.5 4:.5 5:.5 6:.5 7:.5 7:1 7:.5", "-8:.5 -5:.5 -5:.5 -5:.5 -5:1.5 5:.5", "-4:.75 5:.25 -5:.5 6:.5 -7:.5 -7:1 6:.5", "-6:.75 -5:.25 6:.5 -4:.5 4:1.5"] }
+    ],
+    tab: [
+      { lines: ["4 4 5 6 7 7", "7 -8 -5 -5 5 -5", "5 -4 -4 5 -5 -7 -7 -7", "6 -6 6 6 -5 5"] }
+    ]
+  }
+];
+/*END DATA*/
+
+const FRACTIONS = { 0.25: "¼", 0.5: "½", 0.75: "¾" };
+
+function lengthLabel(beats) {
+  const whole = Math.floor(beats);
+  const frac = beats - whole;
+  if (!frac) return String(whole);
+  return (whole || "") + FRACTIONS[frac];
+}
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function noteCell(note, label) {
+  const cell = el("span", "cell");
+  const kind = note === "r" ? " is-rest" : note.startsWith("-") ? " is-draw" : "";
+  cell.append(el("span", "note" + kind, note));
+  if (label !== undefined) cell.append(el("span", "len", label));
+  return cell;
+}
+
+function rhythmLine(line) {
+  const row = el("div", "line");
+  let previous = null;
+  for (const token of line.split(" ")) {
+    const [note, raw] = token.split(":");
+    const beats = Number(raw);
+    const label = raw === undefined ? "?" : beats === previous ? "" : lengthLabel(beats);
+    row.append(noteCell(note, label));
+    previous = beats;
+  }
+  return row;
+}
+
+function plainLine(line) {
+  const row = el("div", "line");
+  for (const note of line.split(" ")) row.append(noteCell(note));
+  return row;
+}
+
+function partsBlock(parts, makeLine, extraClass) {
+  const box = el("div", "lines-group " + extraClass);
+  box.style.display = "grid";
+  box.style.gap = "1.5rem";
+  for (const part of parts) {
+    const wrap = el("div", "part");
+    if (part.label) wrap.append(el("h3", "", part.label));
+    if (part.ref) wrap.append(el("p", "ref", part.ref));
+    if (part.lines) {
+      const lines = el("div", "lines");
+      for (const line of part.lines) lines.append(part.plain ? plainLine(line) : makeLine(line));
+      wrap.append(lines);
+    }
+    box.append(wrap);
+  }
+  return box;
+}
+
+function readView(id) {
+  try {
+    return localStorage.getItem("view-" + id);
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveView(id, value) {
+  try {
+    localStorage.setItem("view-" + id, value);
+  } catch (e) {}
+}
+
+function renderSong(song) {
+  const section = el("section", "song");
+  section.id = song.id;
+  const head = el("div", "song-head");
+  head.append(el("h2", "", song.title));
+  section.append(head);
+
+  const plainBlock = partsBlock(song.tab, plainLine, "plain");
+  if (!song.rhythm) {
+    section.append(el("p", "meta", "Notes only for now. Rhythm not added yet."), plainBlock);
+    return section;
+  }
+
+  const meta = el("p", "meta", song.meta);
+  const rhythmBlock = partsBlock(song.rhythm, rhythmLine, "");
+  const tabNote = el("p", "meta", song.tabNote);
+  const view = el("div", "view");
+  view.setAttribute("role", "group");
+  view.setAttribute("aria-label", "Show " + song.title + " as");
+  const withLengths = el("button", "", "With rhythm");
+  const notesOnly = el("button", "", "Notes only");
+  withLengths.id = song.id + "-rhythm";
+  notesOnly.id = song.id + "-notes";
+  withLengths.type = notesOnly.type = "button";
+  view.append(withLengths, notesOnly);
+  head.append(view);
+  section.append(meta, tabNote, rhythmBlock, plainBlock);
+
+  function show(mode) {
+    const rhythm = mode !== "notes";
+    rhythmBlock.hidden = meta.hidden = !rhythm;
+    plainBlock.hidden = tabNote.hidden = rhythm;
+    withLengths.setAttribute("aria-pressed", String(rhythm));
+    notesOnly.setAttribute("aria-pressed", String(!rhythm));
+  }
+  withLengths.addEventListener("click", () => { show("rhythm"); saveView(song.id, "rhythm"); });
+  notesOnly.addEventListener("click", () => { show("notes"); saveView(song.id, "notes"); });
+  show(readView(song.id));
+  return section;
+}
+
+const links = document.getElementById("song-links");
+const container = document.getElementById("songs");
+for (const song of SONGS) {
+  const item = el("li");
+  const link = el("a", "", song.short || song.title);
+  link.href = "#" + song.id;
+  item.append(link);
+  links.append(item);
+  container.append(renderSong(song));
+}
+</script>
