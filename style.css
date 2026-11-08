@@ -218,3 +218,44 @@ h3 {
 .plain .lines { gap: 0.45rem; }
 
 [hidden] { display: none !important; }
+
+.player {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.1rem;
+  padding: 0.7rem 0.8rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.play-btn {
+  min-width: 6rem;
+  padding: 0.5rem 0.9rem;
+  border: 0;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 600 1rem/1.2 var(--body);
+  cursor: pointer;
+}
+.tempo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 14rem;
+  font-weight: 500;
+}
+.tempo input { flex: 1; min-width: 6rem; accent-color: var(--accent); }
+.tempo-text { min-width: 7.5rem; color: var(--muted); font: 500 0.9rem/1.2 var(--tab); }
+.opt { display: inline-flex; align-items: center; gap: 0.3rem; font-weight: 500; cursor: pointer; }
+.opt input { accent-color: var(--accent); width: 1.05rem; height: 1.05rem; margin: 0; }
+.player .hint { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 0.85rem; }
+
+.cell[data-beats] { cursor: pointer; }
+.cell.playing .note {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 3px;
+  box-shadow: 0 0 0 0.2rem var(--accent);
+}

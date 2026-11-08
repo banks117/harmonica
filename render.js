@@ -29,7 +29,10 @@ function rhythmLine(line) {
     const [note, raw] = token.split(":");
     const beats = Number(raw);
     const label = raw === undefined ? "?" : beats === previous ? "" : lengthLabel(beats);
-    row.append(noteCell(note, label));
+    const cell = noteCell(note, label);
+    cell.dataset.note = note;
+    cell.dataset.beats = beats;
+    row.append(cell);
     previous = beats;
   }
   return row;
@@ -99,11 +102,13 @@ function renderSong(song) {
   withLengths.type = notesOnly.type = "button";
   view.append(withLengths, notesOnly);
   head.append(view);
-  section.append(meta, tabNote, rhythmBlock, plainBlock);
+  const player = createPlayer(song, rhythmBlock);
+  section.append(meta, player.element, tabNote, rhythmBlock, plainBlock);
 
   function show(mode) {
     const rhythm = mode !== "notes";
-    rhythmBlock.hidden = meta.hidden = !rhythm;
+    if (!rhythm) player.stop();
+    rhythmBlock.hidden = meta.hidden = player.element.hidden = !rhythm;
     plainBlock.hidden = tabNote.hidden = rhythm;
     withLengths.setAttribute("aria-pressed", String(rhythm));
     notesOnly.setAttribute("aria-pressed", String(!rhythm));
