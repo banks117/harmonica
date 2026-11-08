@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Harmonica Songbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="wrap crumbs" aria-label="Songbook">
+  <a href="./">← All songs</a>
+  <a href="./#key">How to read the tabs</a>
+</nav>
+
+<main class="wrap" id="main"></main>
+
+<script src="songs.js"></script>
+<script src="render.js"></script>
+<script>
+const main = document.getElementById("main");
+const id = new URLSearchParams(location.search).get("id");
+const index = SONGS.findIndex((song) => song.id === id);
+
+function pagerLink(song, className, label) {
+  const a = el("a", className);
+  a.href = "song.html?id=" + song.id;
+  a.append(el("small", "", label), el("span", "", song.short || song.title));
+  return a;
+}
+
+if (index === -1) {
+  main.append(el("p", "meta", "Song not found."));
+} else {
+  const song = SONGS[index];
+  document.title = song.title + " · Harmonica Songbook";
+  main.append(renderSong(song));
+  const pager = el("nav", "pager");
+  pager.setAttribute("aria-label", "Other songs");
+  if (index > 0) pager.append(pagerLink(SONGS[index - 1], "prev", "Previous"));
+  if (index < SONGS.length - 1) pager.append(pagerLink(SONGS[index + 1], "next", "Next"));
+  main.append(pager);
+}
+</script>
+</body>
+</html>
